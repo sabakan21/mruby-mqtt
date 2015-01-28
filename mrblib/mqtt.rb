@@ -116,29 +116,3 @@ class MQTT < TCPSocket
 		
 		
 end
-
-mqtt = MQTT.open("192.168.63.105", 16102)
-mqtt.connect
-p mqtt.get
-puts "receive connection "
-mqtt.publish("test/mruby", "this is test text from " + mqtt.client_id,1)
-
-1000.times{|i|
-	100.times{|j|
-		k=i+j
-	}
-}
-
-p mqtt.get
-
-p "Subscribe"
-mqtt.subscrb("test/#")
-p mqtt.get
-
-
-loop do
-		r = mqtt.get
-		p r unless r.nil?
-end
-
-mqtt.close
