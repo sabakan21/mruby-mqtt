@@ -3,11 +3,15 @@ class MQTT < TCPSocket
 		@client_id
 		@time
 		@keep_alive
+    @read_queue
+    @read_packet
 		attr_reader :client_id
 		def initialize(sockaddr, family=Socket::PF_UNSPEC, socktype=0, protocol=0)
 				@messageID = 1
         @client_id = "mruby" + sprintf("%04d",Random.rand(9999))
 				@time = Time.now
+        @read_queue = Array.new
+        @read_packet = Array.new
 				super
 		end
 		
@@ -105,6 +109,19 @@ class MQTT < TCPSocket
 		end
 
 		def get
+        return nil if self.pos == 0
+
+        head = self.recv 2
+        body = head.bytes[1]
+        msg_type = head.bytes[0] >>4
+        if # is message?
+          ant
+
+        else # packet
+          et
+        end
+
+
 				head =self.recv 2
 				p " received header =" + head
 				while head.empty? do
