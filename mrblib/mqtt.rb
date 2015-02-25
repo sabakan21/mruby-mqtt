@@ -45,10 +45,10 @@ class MQTT < TCPSocket
 				#payload << payload
 				head_len = (head_var + payload).size.chr
 				
-				p head_fix
-        p head_len
-        p head_var
-        p payload
+				#p head_fix
+        #p head_len
+        #p head_var
+        #p payload
 				self.write(head_fix + head_len + head_var + payload)
 		end
 		
@@ -70,11 +70,11 @@ class MQTT < TCPSocket
 				
 				head_len = (head_var + mes).size.chr
 				
-				p head_fix
-				p head_len
-				p head_var
-				p "=========="
-				p head_fix + head_len + head_var + mes
+				#p head_fix
+				#p head_len
+				#p head_var
+				#p "=========="
+				#p head_fix + head_len + head_var + mes
 				self.write(head_fix + head_len + head_var + mes)
 				
 				@messageID += 1
@@ -97,11 +97,11 @@ class MQTT < TCPSocket
 				head_len = (head_var + payload).size.chr
 				
 				
-				p head_fix
-				p head_len
-				p head_var
-				p "=========="
-				p head_fix + head_len + head_var + payload
+				#p head_fix
+				#p head_len
+				#p head_var
+				#p "=========="
+				#p head_fix + head_len + head_var + payload
 				
 				@messageID++
 				
@@ -123,7 +123,7 @@ class MQTT < TCPSocket
 
 
 				head =self.recv 2
-				p " received header =" + head
+				#p " received header =" + head
 				while head.empty? do
 						head =self.recv 2
 				end
