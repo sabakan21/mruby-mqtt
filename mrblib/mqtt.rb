@@ -109,24 +109,9 @@ class MQTT < TCPSocket
 		end
 
 		def get
-        return nil if self.pos == 0
-
-        head = self.recv 2
-        body = head.bytes[1]
-        msg_type = head.bytes[0] >>4
-        if # is message?
-          ant
-
-        else # packet
-          et
-        end
-
+        return nil if self.eof
 
 				head =self.recv 2
-				#p " received header =" + head
-				while head.empty? do
-						head =self.recv 2
-				end
 				r = self.recv head[1].bytes[0]
 				return head + r
 		end
