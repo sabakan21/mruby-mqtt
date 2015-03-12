@@ -1,4 +1,8 @@
 # mruby-mqtt
+
+##Requirement
+mruby-socket
+
 ##TODO
 
 edit response to broker
