@@ -109,11 +109,12 @@ class MQTT < TCPSocket
 		end
 
 		def get
-        return nil if self.eof
-
-				head =self.recv 2
-				r = self.recv head[1].bytes[0]
-				return head + r
+      head = self.getc
+      head << self.getc
+      head.bytes[1].times do
+        head << self.getc
+      end
+      return head
 		end
 		
 		
