@@ -8,7 +8,7 @@ class MQTT < TCPSocket
 
   def initialize(sockaddr, family=Socket::PF_UNSPEC, socktype=0, protocol=0)
     @messageID = 1
-    @client_id = "mruby"
+    @client_id = "mruby" + sprintf("%04d",Random.rand(9999))
     @read_queue = Array.new
     @read_packet = Array.new
     super
