@@ -5,6 +5,7 @@ class MQTT < TCPSocket
   @read_queue
   @read_packet
   attr_reader :client_id
+
   def initialize(sockaddr, family=Socket::PF_UNSPEC, socktype=0, protocol=0)
     @messageID = 1
     @client_id = "mruby"
@@ -50,7 +51,7 @@ class MQTT < TCPSocket
     self.write(head_fix + head_len + head_var + payload)
   end
 
-  def publish(topic, text, qos = 1)
+  def publish(topic, text, qos = 0)
     if qos > 2
       qos = 2
     elsif qos < 0
@@ -68,11 +69,6 @@ class MQTT < TCPSocket
 
     head_len = (head_var + mes).size.chr
 
-    #p head_fix
-    #p head_len
-    #p head_var
-    #p "=========="
-    #p head_fix + head_len + head_var + mes
     self.write(head_fix + head_len + head_var + mes)
 
     @messageID += 1
@@ -94,23 +90,17 @@ class MQTT < TCPSocket
 
     head_len = (head_var + payload).size.chr
 
-
-    #p head_fix
-    #p head_len
-    #p head_var
-    #p "=========="
-    #p head_fix + head_len + head_var + payload
-
     @messageID++
 
       self.write(head_fix + head_len + head_var + payload)
   end
 
   def get_packet
-    head = self.getc
-    head << self.getc
+    head = ""
+    head << self.recv(1)
+    head << self.recv(1)
     head.bytes[1].times do
-      head << self.getc
+      head << self.recv(1)
     end
     return head
   end
