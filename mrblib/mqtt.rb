@@ -62,8 +62,11 @@ class MQTT < TCPSocket
     head_len = 0.chr
 
     head_var = self.mqttutf topic
-    head_var << (@messageID >> 8).chr
-    head_var << (@messageID & 0xffff).chr
+    if qos > 0 then
+      head_var << (@messageID >> 8).chr
+      head_var << (@messageID & 0xffff).chr
+      @messageID += 1
+    end
 
     mes = text
 
@@ -71,7 +74,6 @@ class MQTT < TCPSocket
 
     self.write(head_fix + head_len + head_var + mes)
 
-    @messageID += 1
   end
 
   def subscrb topic
