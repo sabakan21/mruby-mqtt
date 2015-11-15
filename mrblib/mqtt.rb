@@ -107,6 +107,20 @@ class MQTT < TCPSocket
     return head
   end
 
+  def get_nonblock
+    head = ""
+    begin
+      head << self.recv_nonblock(2)
+      head.bytes[1].times do
+        head << self.recv(1)
+      end
+      return head
+    rescue
+      return nil
+    end
+  end
+
+
   def get
     if block_given?
       loop do
