@@ -78,7 +78,7 @@ class MQTT < TCPSocket
 
   def subscrb topic
 
-    qos =1
+    qos = 0
 
     head_fix = 0b10000010.chr
     head_len = 0.chr
