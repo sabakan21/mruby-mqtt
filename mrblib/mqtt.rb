@@ -35,7 +35,7 @@ class MQTT < TCPSocket
     head_var << 2.chr
     #keepalive timer MSB => LSB
     head_var << 0.chr
-    head_var << 60.chr
+    head_var << 0.chr
 
     @keep_alive = 10
 
@@ -106,13 +106,26 @@ class MQTT < TCPSocket
       self.write(head_fix + head_len + head_var + payload)
   end
 
-  def get
-    return nil if self.eof
-
-    head =self.recv 2
-    r = self.recv head[1].bytes[0]
-    return head + r
+  def get_packet
+    head = self.getc
+    head << self.getc
+    head.bytes[1].times do
+      head << self.getc
+    end
+    return head
   end
 
+  def get
+    if block_given?
+      loop do
+        # TODO: use queue
+        yield self.get_packet
+        # TODO: return ack if qos > 0
+      end
+    else
+      self.get_packet
+    end
+  end
+	
 
 end
