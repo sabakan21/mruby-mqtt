@@ -107,10 +107,9 @@ class MQTT < TCPSocket
   end
 
   def get_packet
-    head = self.getc
-    head << self.getc
+    head = self.recv(2)
     head.bytes[1].times do
-      head << self.getc
+      head << self.recv(1)
     end
     return head
   end
