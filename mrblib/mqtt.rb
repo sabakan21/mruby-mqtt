@@ -5,9 +5,8 @@ class MQTT < TCPSocket
   @read_queue
   @read_packet
   attr_reader :client_id
-  def initialize(sockaddr, family=Socket::PF_UNSPEC, socktype=0, protocol=0)
+  def open(sockaddr, port)
     @messageID = 1
-    @client_id = "mruby"
     @read_queue = Array.new
     @read_packet = Array.new
     super
@@ -18,7 +17,8 @@ class MQTT < TCPSocket
   end
 
 
-  def connect
+  def connect(id)
+    @client_id = id
     #fixed header
     head_fix = 16.chr
 
