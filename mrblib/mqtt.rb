@@ -4,8 +4,8 @@ class MQTT < TCPSocket
   @keep_alive
   @read_queue
   @read_packet
-  attr_reader :client_id
-  def open(sockaddr, port)
+  attr_reader :client_id, :messageID
+  def initialize
     @messageID = 1
     @read_queue = Array.new
     @read_packet = Array.new
@@ -50,7 +50,7 @@ class MQTT < TCPSocket
     self.write(head_fix + head_len + head_var + payload)
   end
 
-  def publish(topic, text, qos = 1)
+  def publish(topic, text, qos = 0)
     if qos > 2
       qos = 2
     elsif qos < 0
@@ -61,9 +61,11 @@ class MQTT < TCPSocket
     head_len = 0.chr
 
     head_var = self.mqttutf topic
-    head_var << (@messageID >> 8).chr
-    head_var << (@messageID & 0xffff).chr
 
+    if qos > 0
+      head_var << (@messageID >> 8).chr
+      head_var << (@messageID & 0xffff).chr
+    end
     mes = text
 
     head_len = (head_var + mes).size.chr
@@ -85,7 +87,7 @@ class MQTT < TCPSocket
     head_fix = 0b10000010.chr
     head_len = 0.chr
 
-    head_var = (@messageID >> 8).chr
+    head_var = (@messageID / 256).to_i.chr
     head_var << (@messageID & 0xffff).chr
 
     #実際ペイロード
@@ -108,6 +110,7 @@ class MQTT < TCPSocket
 
   def get_packet
     head = self.recv(2)
+    return if head == nil
     head.bytes[1].times do
       head << self.recv(1)
     end
@@ -125,6 +128,5 @@ class MQTT < TCPSocket
       self.get_packet
     end
   end
-	
 
 end
