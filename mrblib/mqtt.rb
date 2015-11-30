@@ -5,9 +5,10 @@ class MQTT < TCPSocket
   @read_queue
   @read_packet
   attr_reader :client_id
+
   def initialize(sockaddr, family=Socket::PF_UNSPEC, socktype=0, protocol=0)
     @messageID = 1
-    @client_id = "mruby"
+    @client_id = "mruby" + sprintf("%04d",Random.rand(9999))
     @read_queue = Array.new
     @read_packet = Array.new
     super
@@ -50,7 +51,7 @@ class MQTT < TCPSocket
     self.write(head_fix + head_len + head_var + payload)
   end
 
-  def publish(topic, text, qos = 1)
+  def publish(topic, text, qos = 0)
     if qos > 2
       qos = 2
     elsif qos < 0
@@ -61,26 +62,23 @@ class MQTT < TCPSocket
     head_len = 0.chr
 
     head_var = self.mqttutf topic
-    head_var << (@messageID >> 8).chr
-    head_var << (@messageID & 0xffff).chr
+    if qos > 0 then
+      head_var << (@messageID >> 8).chr
+      head_var << (@messageID & 0xffff).chr
+      @messageID += 1
+    end
 
     mes = text
 
     head_len = (head_var + mes).size.chr
 
-    #p head_fix
-    #p head_len
-    #p head_var
-    #p "=========="
-    #p head_fix + head_len + head_var + mes
     self.write(head_fix + head_len + head_var + mes)
 
-    @messageID += 1
   end
 
   def subscrb topic
 
-    qos =1
+    qos = 0
 
     head_fix = 0b10000010.chr
     head_len = 0.chr
@@ -94,26 +92,34 @@ class MQTT < TCPSocket
 
     head_len = (head_var + payload).size.chr
 
-
-    #p head_fix
-    #p head_len
-    #p head_var
-    #p "=========="
-    #p head_fix + head_len + head_var + payload
-
     @messageID++
 
       self.write(head_fix + head_len + head_var + payload)
   end
 
   def get_packet
-    head = self.getc
-    head << self.getc
+    head = ""
+    head << self.recv(1)
+    head << self.recv(1)
     head.bytes[1].times do
-      head << self.getc
+      head << self.recv(1)
     end
     return head
   end
+
+  def get_nonblock
+    head = ""
+    begin
+      head << self.recv_nonblock(2)
+      head.bytes[1].times do
+        head << self.recv(1)
+      end
+      return head
+    rescue
+      return nil
+    end
+  end
+
 
   def get
     if block_given?
