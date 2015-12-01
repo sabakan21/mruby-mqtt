@@ -132,6 +132,31 @@ class MQTT < TCPSocket
       self.get_packet
     end
   end
-	
+
+  def self.parse(str)
+    fix_head = str.slice!(0, 2)
+    type_num = fix_head.bytes[0] >> 4
+    under = fix_head.bytes[0] & 0b1111
+    hash = { 'msg_type' => type_num,
+             'dup' => under >> 3,
+             'qos' => (under & 0b111) >> 1,
+             'retain' => under & 1,
+             'remaining length' => fix_head.bytes[1]
+    }
+    if type_num == 3
+      topic_len = str.bytes[0] * 256 + str.bytes[1]
+      hash['topic'] = str.slice(2, topic_len)
+      str.slice!(0, 2 + topic_len)
+      if hash['qos'] > 0
+        # message id (2 bit)
+        hash['msg_id'] = str.bytes[0] * 256 + str.bytes[1]
+        str.slice!(0, 2)
+      end
+      hash['mesg'] = str
+    else
+      hash['remain'] = str
+    end
+    hash
+  end
 
 end
