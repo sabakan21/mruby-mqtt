@@ -62,6 +62,12 @@ class MQTT < TCPSocket
 
     head_var = self.mqttutf topic
 
+    if qos > 0 then
+      head_var << (@messageID >> 8).chr
+      head_var << (@messageID & 0xffff).chr
+      @messageID += 1
+    end
+
     if qos > 0
       head_var << (@messageID >> 8).chr
       head_var << (@messageID & 0xffff).chr
@@ -70,19 +76,13 @@ class MQTT < TCPSocket
 
     head_len = (head_var + mes).size.chr
 
-    #p head_fix
-    #p head_len
-    #p head_var
-    #p "=========="
-    #p head_fix + head_len + head_var + mes
     self.write(head_fix + head_len + head_var + mes)
 
-    @messageID += 1
   end
 
   def subscrb topic
 
-    qos =1
+    qos = 0
 
     head_fix = 0b10000010.chr
     head_len = 0.chr
@@ -96,26 +96,35 @@ class MQTT < TCPSocket
 
     head_len = (head_var + payload).size.chr
 
-
-    #p head_fix
-    #p head_len
-    #p head_var
-    #p "=========="
-    #p head_fix + head_len + head_var + payload
-
     @messageID++
 
       self.write(head_fix + head_len + head_var + payload)
   end
 
   def get_packet
+
     head = self.recv(2)
     return if head == nil
+
     head.bytes[1].times do
       head << self.recv(1)
     end
     return head
   end
+
+  def get_nonblock
+    head = ""
+    begin
+      head << self.recv_nonblock(2)
+      head.bytes[1].times do
+        head << self.recv(1)
+      end
+      return head
+    rescue
+      return nil
+    end
+  end
+
 
   def get
     if block_given?
@@ -127,6 +136,32 @@ class MQTT < TCPSocket
     else
       self.get_packet
     end
+  end
+
+  def self.parse(str)
+    fix_head = str.slice!(0, 2)
+    type_num = fix_head.bytes[0] >> 4
+    under = fix_head.bytes[0] & 0b1111
+    hash = { 'msg_type' => type_num,
+             'dup' => under >> 3,
+             'qos' => (under & 0b111) >> 1,
+             'retain' => under & 1,
+             'remaining length' => fix_head.bytes[1]
+    }
+    if type_num == 3
+      topic_len = str.bytes[0] * 256 + str.bytes[1]
+      hash['topic'] = str.slice(2, topic_len)
+      str.slice!(0, 2 + topic_len)
+      if hash['qos'] > 0
+        # message id (2 bit)
+        hash['msg_id'] = str.bytes[0] * 256 + str.bytes[1]
+        str.slice!(0, 2)
+      end
+      hash['mesg'] = str
+    else
+      hash['remain'] = str
+    end
+    hash
   end
 
 end
