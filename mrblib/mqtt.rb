@@ -130,7 +130,8 @@ class MQTT < TCPSocket
     if block_given?
       loop do
         # TODO: use queue
-        yield self.get_packet
+        packet = get_packet
+        yield packet.nil? ? next : packet
         # TODO: return ack if qos > 0
       end
     else
