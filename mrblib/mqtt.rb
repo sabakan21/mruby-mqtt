@@ -4,11 +4,9 @@ class MQTT < TCPSocket
   @keep_alive
   @read_queue
   @read_packet
-  attr_reader :client_id
-
-  def initialize(sockaddr, family=Socket::PF_UNSPEC, socktype=0, protocol=0)
+  attr_reader :client_id, :messageID
+  def initialize
     @messageID = 1
-    @client_id = "mruby" + sprintf("%04d",Random.rand(9999))
     @read_queue = Array.new
     @read_packet = Array.new
     super
@@ -19,7 +17,8 @@ class MQTT < TCPSocket
   end
 
 
-  def connect
+  def connect(id)
+    @client_id = id
     #fixed header
     head_fix = 16.chr
 
@@ -62,12 +61,17 @@ class MQTT < TCPSocket
     head_len = 0.chr
 
     head_var = self.mqttutf topic
+
     if qos > 0 then
       head_var << (@messageID >> 8).chr
       head_var << (@messageID & 0xffff).chr
       @messageID += 1
     end
 
+    if qos > 0
+      head_var << (@messageID >> 8).chr
+      head_var << (@messageID & 0xffff).chr
+    end
     mes = text
 
     head_len = (head_var + mes).size.chr
@@ -83,7 +87,7 @@ class MQTT < TCPSocket
     head_fix = 0b10000010.chr
     head_len = 0.chr
 
-    head_var = (@messageID >> 8).chr
+    head_var = (@messageID / 256).to_i.chr
     head_var << (@messageID & 0xffff).chr
 
     #実際ペイロード
@@ -98,9 +102,10 @@ class MQTT < TCPSocket
   end
 
   def get_packet
-    head = ""
-    head << self.recv(1)
-    head << self.recv(1)
+
+    head = self.recv(2)
+    return if head == nil
+
     head.bytes[1].times do
       head << self.recv(1)
     end
