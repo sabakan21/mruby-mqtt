@@ -1,54 +1,35 @@
 class MQTT < TCPSocket
-  @messageID
-  @client_id
-  @keep_alive
-  @read_queue
-  @read_packet
-  attr_reader :client_id, :messageID
+  attr_reader :client_id, :message_id
 
-  def initialize *arg
-    @messageID = 1
-    @read_queue = Array.new
-    @read_packet = Array.new
-    super *arg
+  def initialize(*arg)
+    @message_id = 1
+    super(*arg)
   end
 
-  def mqttutf text
+  def mqttutf(text)
     (text.size >> 8).chr + (text.size & 0xffff).chr + text
   end
 
-
   def connect(id)
     @client_id = id
-    #fixed header
     head_fix = 16.chr
 
-    #header length
-    head_len = 0.chr
-
-    #variable header
-    #length MSB => LSB
+    # variable header
+    # version
     head_var = 0.chr + 6.chr
-    #protocol name and version
-    head_var << "MQIsdp"
+    head_var << 'MQIsdp'
     head_var << 3.chr
-    #flags
+    # flags
     head_var << 2.chr
-    #keepalive timer MSB => LSB
+    # keepalive timer MSB => LSB
     head_var << 0.chr
     head_var << 0.chr
 
-    @keep_alive = 10
-
-    payload = self.mqttutf @client_id
-    #payload << payload
+    payload = mqttutf @client_id
+    # payload << payload
     head_len = (head_var + payload).size.chr
 
-    #p head_fix
-    #p head_len
-    #p head_var
-    #p payload
-    self.write(head_fix + head_len + head_var + payload)
+    write(head_fix + head_len + head_var + payload)
   end
 
   def publish(topic, text, qos = 0)
@@ -64,9 +45,9 @@ class MQTT < TCPSocket
     head_var = self.mqttutf topic
 
     if qos > 0 then
-      head_var << (@messageID >> 8).chr
-      head_var << (@messageID & 0xffff).chr
-      @messageID += 1
+      head_var << (@message_id >> 8).chr
+      head_var << (@message_id & 0xffff).chr
+      @message_id += 1
     end
 
     mes = text
@@ -84,8 +65,8 @@ class MQTT < TCPSocket
     head_fix = 0b10000010.chr
     head_len = 0.chr
 
-    head_var = (@messageID / 256).to_i.chr
-    head_var << (@messageID & 0xffff).chr
+    head_var = (@message_id / 256).to_i.chr
+    head_var << (@message_id & 0xffff).chr
 
     #実際ペイロード
     payload = self.mqttutf topic
@@ -93,7 +74,7 @@ class MQTT < TCPSocket
 
     head_len = (head_var + payload).size.chr
 
-    @messageID++
+    @message_id++
 
       self.write(head_fix + head_len + head_var + payload)
   end
