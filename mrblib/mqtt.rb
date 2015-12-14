@@ -1,3 +1,4 @@
+# MQTT Class
 class MQTT < TCPSocket
   attr_reader :client_id, :message_id
 
@@ -60,7 +61,6 @@ class MQTT < TCPSocket
 
   def connect(id)
     @client_id = id
-
     # variable header
     # version
     head_var = "\000\006MQIsdp\003"
@@ -130,7 +130,6 @@ class MQTT < TCPSocket
     end
   end
 
-
   def get
     if block_given?
       loop do
@@ -142,6 +141,5 @@ class MQTT < TCPSocket
       self.get_packet
     end
   end
-
 
 end
