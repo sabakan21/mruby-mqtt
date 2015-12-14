@@ -5,11 +5,12 @@ class MQTT < TCPSocket
   @read_queue
   @read_packet
   attr_reader :client_id, :messageID
-  def initialize
+
+  def initialize *arg
     @messageID = 1
     @read_queue = Array.new
     @read_packet = Array.new
-    super
+    super *arg
   end
 
   def mqttutf text
@@ -68,10 +69,6 @@ class MQTT < TCPSocket
       @messageID += 1
     end
 
-    if qos > 0
-      head_var << (@messageID >> 8).chr
-      head_var << (@messageID & 0xffff).chr
-    end
     mes = text
 
     head_len = (head_var + mes).size.chr
