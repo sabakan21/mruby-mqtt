@@ -28,7 +28,7 @@ class Test4MQTT < MTest::Unit::TestCase
             'dup' => 0,
             'qos' => 0,
             'retain' => 0,
-            'remaining length' => 16,
+            'len' => 16,
             'topic' => 'mruby/test',
             'mesg' => 'test'
     }
