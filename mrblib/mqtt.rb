@@ -106,6 +106,12 @@ class MQTT < TCPSocket
     write(packet.packet)
   end
 
+  def disconnect
+    packet = Packet.new(14, '')
+    write(packet.packet)
+    close
+  end
+
   def get_packet
 
     head = self.recv(2)
